@@ -71,17 +71,23 @@ function updateBoard(){
 // Mint NFT
 async function mintNFT(){
     try{
-        if(!window.ethereum){ alert("Instale MetaMask ou Rabby"); return; }
-
-        const network = await window.ethereum.request({ method: 'eth_chainId' });
-        if(network !== '0x4ce7fa'){ 
-            alert("Mude sua carteira para Arc Testnet");
-            return;
+        if(!window.ethereum){ 
+            alert("Instale MetaMask ou Rabby"); 
+            return; 
         }
 
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        // Conecta provider Arc
+        const provider = new ethers.BrowserProvider(window.ethereum, "any");
         await provider.send("eth_requestAccounts", []);
         const signer = await provider.getSigner();
+
+        const network = await provider.getNetwork();
+        console.log("Network:", network);
+
+        if(network.chainId !== 5042002){ 
+            alert("⚠️ Mude sua carteira para Arc Testnet");
+            return;
+        }
 
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
@@ -91,7 +97,7 @@ async function mintNFT(){
             timestamp: Date.now()
         });
 
-        status.textContent = "📝 Abrindo assinatura...";
+        status.textContent = "📝 Abrindo assinatura na carteira...";
         const tx = await contract.mintScore(tokenURI);
         status.textContent = `💳 Transação enviada: ${tx.hash}`;
         const receipt = await tx.wait();
